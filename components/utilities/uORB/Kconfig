@@ -1,0 +1,14 @@
+menuconfig RT_USING_UORB
+	bool "enable uorb pkgs"
+	default n
+
+if RT_USING_UORB
+
+	config ORB_MULTI_MAX_INSTANCES
+		int "max number of multi topic instance"
+		default 4
+	
+	config ORB_MAX_SUBSCRIBES
+		int "max number of topic subscribe"
+		default 10
+endif
