@@ -18,8 +18,8 @@
 
 struct rt_uorb_device
 {
-    struct rt_device    parent;
-    struct rt_uorb_node node;
+    struct rt_device  parent;
+    struct orb_node_s node;
 };
 
 

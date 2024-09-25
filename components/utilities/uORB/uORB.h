@@ -34,6 +34,7 @@ struct orb_metadata
 };
 
 typedef const struct orb_metadata *orb_id_t;
+typedef const struct orb_metadata  orb_metadata_t;
 
 
 /**
@@ -96,34 +97,41 @@ typedef const struct orb_metadata *orb_id_t;
  * publisher.
  */
 typedef void *orb_advertise_t;
-typedef void *orb_subscribe_t;
 
 
-struct rt_uorb_node
+typedef struct orb_callback_s
+{
+    rt_list_t list;
+    void (*call)();
+} orb_callback_t;
+
+
+typedef struct orb_node_s
 {
     rt_list_t                  list;
     const struct orb_metadata *meta;
     rt_uint8_t                 instance;
     rt_uint8_t                 queue_size;
     rt_uint32_t                generation;
-    // rt_list_t          callbacks;
-    rt_bool_t   advertised;
-    rt_uint8_t  subscriber_count;
-    rt_bool_t   data_valid;
-    rt_uint8_t *data;
-};
+    rt_list_t                  callbacks;
+    rt_bool_t                  advertised;
+    rt_uint8_t                 subscriber_count;
+    rt_bool_t                  data_valid;
+    rt_uint8_t                *data;
+} orb_node_t;
 
-struct rt_uorb_subscribe
+
+typedef struct orb_subscribe_s
 {
     const struct orb_metadata *meta;
     rt_uint8_t                 instance;
-    rt_tick_t                  update_interval;
+    rt_tick_t                  interval;
 
     struct rt_uorb_device *node;
     rt_uint32_t            generation;
     rt_tick_t              last_update;
     rt_bool_t              callback_registered;
-};
+} orb_subscribe_t;
 
 
 #ifdef __cplusplus
