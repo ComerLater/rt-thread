@@ -17,6 +17,7 @@
 #include "drv_spi.h"
 
 #include "drv_pinmux.h"
+#include "drv_ioremap.h"
 
 #define DBG_LEVEL   DBG_LOG
 #include <rtdbg.h>
@@ -224,7 +225,7 @@ static const struct rt_spi_ops _spi_ops =
     .xfer = spi_xfer,
 };
 
-#if defined(BOARD_TYPE_MILKV_DUO) || defined(BOARD_TYPE_MILKV_DUO_SPINOR) || defined(BOARD_TYPE_MILKV_DUO256M) || defined(BOARD_TYPE_MILKV_DUO256M_SPINOR)
+#if defined(BOARD_TYPE_MILKV_DUO) || defined(BOARD_TYPE_MILKV_DUO256M)
 // For Duo / Duo 256m, only SPI2 are exported on board.
 #ifdef BSP_USING_SPI0
 static const char *pinname_whitelist_spi0_sck[] = {
@@ -334,6 +335,8 @@ int rt_hw_spi_init(void)
 
     for (rt_size_t i = 0; i < sizeof(_spi_obj) / sizeof(struct _device_spi); i++)
     {
+        _spi_obj[i].base_addr = (rt_ubase_t)DRV_IOREMAP((void *)_spi_obj[i].base_addr, 0x1000);
+
         _spi_obj[i].spi_bus.parent.user_data = (void *)&_spi_obj[i];
         ret = rt_spi_bus_register(&_spi_obj[i].spi_bus, _spi_obj[i].device_name, &_spi_ops);
     }

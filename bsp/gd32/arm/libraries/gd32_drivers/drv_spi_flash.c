@@ -10,10 +10,10 @@
  */
 #include <board.h>
 #include "drv_spi.h"
-#include "spi_flash.h"
+#include "dev_spi_flash.h"
 
 #ifdef RT_USING_SFUD
-#include "spi_flash_sfud.h"
+#include "dev_spi_flash_sfud.h"
 #endif
 
 #include <rthw.h>
@@ -67,7 +67,7 @@ static int rt_hw_spi_flash_with_sfud_init(void)
 
     return RT_EOK;
 }
-INIT_COMPONENT_EXPORT(rt_hw_spi_flash_with_sfud_init)
+INIT_COMPONENT_EXPORT(rt_hw_spi_flash_with_sfud_init);
 #endif
 
 #ifdef RT_USING_DFS

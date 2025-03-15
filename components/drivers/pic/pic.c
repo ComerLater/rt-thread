@@ -16,7 +16,9 @@
 #include <rtdbg.h>
 
 #include <drivers/pic.h>
+#ifdef RT_USING_PIC_STATISTICS
 #include <ktime.h>
+#endif
 
 struct irq_traps
 {
@@ -31,6 +33,7 @@ static int _ipi_hash[] =
 #ifdef RT_USING_SMP
     [RT_SCHEDULE_IPI] = RT_SCHEDULE_IPI,
     [RT_STOP_IPI] = RT_STOP_IPI,
+    [RT_SMP_CALL_IPI] = RT_SMP_CALL_IPI,
 #endif
 };
 
@@ -48,7 +51,7 @@ static struct rt_pic_irq _pirq_hash[MAX_HANDLERS] =
     }
 };
 
-static struct rt_spinlock _pic_lock = { };
+static RT_DEFINE_SPINLOCK(_pic_lock);
 static rt_size_t _pic_name_max = sizeof("PIC");
 static rt_list_t _pic_nodes = RT_LIST_OBJECT_INIT(_pic_nodes);
 static rt_list_t _traps_nodes = RT_LIST_OBJECT_INIT(_traps_nodes);
@@ -173,18 +176,51 @@ rt_err_t rt_pic_linear_irq(struct rt_pic *pic, rt_size_t irq_nr)
     return err;
 }
 
+rt_err_t rt_pic_cancel_irq(struct rt_pic *pic)
+{
+    rt_err_t err = RT_EOK;
+
+    if (pic && pic->pirqs)
+    {
+        rt_ubase_t level = rt_spin_lock_irqsave(&_pic_lock);
+
+        /*
+         * This is only to make system runtime safely,
+         * we don't recommend PICs to unregister.
+         */
+        rt_list_remove(&pic->list);
+
+        rt_spin_unlock_irqrestore(&_pic_lock, level);
+    }
+    else
+    {
+        err = -RT_EINVAL;
+    }
+
+    return err;
+}
+
 static void config_pirq(struct rt_pic *pic, struct rt_pic_irq *pirq, int irq, int hwirq)
 {
     rt_ubase_t level = rt_spin_lock_irqsave(&pirq->rw_lock);
+
+    if (pirq->irq < 0)
+    {
+        rt_list_init(&pirq->list);
+        rt_list_init(&pirq->children_nodes);
+        rt_list_init(&pirq->isr.list);
+    }
+    else if (pirq->pic != pic)
+    {
+        RT_ASSERT(rt_list_isempty(&pirq->list) == RT_TRUE);
+        RT_ASSERT(rt_list_isempty(&pirq->children_nodes) == RT_TRUE);
+        RT_ASSERT(rt_list_isempty(&pirq->isr.list) == RT_TRUE);
+    }
 
     pirq->irq = irq;
     pirq->hwirq = hwirq;
 
     pirq->pic = pic;
-
-    rt_list_init(&pirq->list);
-    rt_list_init(&pirq->children_nodes);
-    rt_list_init(&pirq->isr.list);
 
     rt_spin_unlock_irqrestore(&pirq->rw_lock, level);
 }
@@ -494,6 +530,8 @@ rt_err_t rt_pic_do_traps(void)
     rt_err_t err = -RT_ERROR;
     struct irq_traps *traps;
 
+    rt_interrupt_enter();
+
     rt_list_for_each_entry(traps, &_traps_nodes, list)
     {
         if (traps->handler(traps->data))
@@ -503,6 +541,8 @@ rt_err_t rt_pic_do_traps(void)
             break;
         }
     }
+
+    rt_interrupt_leave();
 
     return err;
 }
@@ -535,11 +575,17 @@ rt_err_t rt_pic_handle_isr(struct rt_pic_irq *pirq)
 
         rt_list_for_each_entry(child, &pirq->children_nodes, list)
         {
-            rt_pic_irq_ack(child->irq);
+            if (child->pic->ops->irq_ack)
+            {
+                child->pic->ops->irq_ack(child);
+            }
 
             err = rt_pic_handle_isr(child);
 
-            rt_pic_irq_eoi(child->irq);
+            if (child->pic->ops->irq_eoi)
+            {
+                child->pic->ops->irq_eoi(child);
+            }
         }
     }
 

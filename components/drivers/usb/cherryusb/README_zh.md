@@ -1,8 +1,18 @@
-# CherryUSB
+<h1 align="center" style="margin: 30px 0 30px; font-weight: bold;">CherryUSB</h1>
+<p align="center">
+	<a href="https://github.com/cherry-embedded/CherryUSB/releases"><img src="https://img.shields.io/github/release/cherry-embedded/CherryUSB.svg"><a>
+	<a href="https://github.com/cherry-embedded/CherryUSB/blob/master/LICENSE"><img src="https://img.shields.io/github/license/cherry-embedded/CherryUSB.svg?style=flat-square"></a>
+    <a href="https://github.com/cherry-embedded/CherryUSB/actions/workflows/deploy-docs.yml"><img src="https://github.com/cherry-embedded/CherryUSB/actions/workflows/deploy-docs.yml/badge.svg"> </a>
+    <a href="https://discord.com/invite/wFfvrSAey8"><img src="https://img.shields.io/badge/Discord-blue?logo=discord&style=flat-square"> </a>
+</p>
 
-[English](./README.md)
+<p align="center">
+    <a href="./README_zh.md">中文</a>
+    |
+    <a href="./README.md">English</a>
+</p>
 
-CherryUSB 是一个小而美的、可移植性高的、用于嵌入式系统(带 USB IP)的 USB 主从协议栈。
+CherryUSB 是一个小而美的、可移植性高的、用于嵌入式系统(带 USB IP)的高性能 USB 主从协议栈。
 
 ![CherryUSB](CherryUSB.svg)
 
@@ -22,7 +32,7 @@ CherryUSB 是一个小而美的、可移植性高的、用于嵌入式系统(带
 为了方便用户使用 USB 接口，考虑到用户学习过 uart 和 dma，因此，设计的数据收发类接口具备以下优点：
 
 - 等价于使用 uart tx dma/uart rx dma
-- 收发长度没有限制，用户不需要关心 USB 分包过程（porting 驱动做分包过程）
+- 收发长度没有限制，用户不需要关心 USB 分包过程（分包过程在 porting 中处理）
 
 ### 易于发挥 USB 性能
 
@@ -32,7 +42,7 @@ CherryUSB 是一个小而美的、可移植性高的、用于嵌入式系统(带
 - Memory zero copy
 - IP 如果带 DMA 则使用 DMA 模式（DMA 带硬件分包功能）
 - 长度无限制，方便对接硬件 DMA 并且发挥 DMA 的优势
-- 分包功能在中断中处理
+- 分包过程在中断中执行
 
 ## 目录结构
 
@@ -75,13 +85,13 @@ CherryUSB Device 协议栈资源占用说明（GCC 10.2 with -O2）：
 
 |   file        |  FLASH (Byte)  |  No Cache RAM (Byte)      |  RAM (Byte)   |  Heap (Byte)     |
 |:-------------:|:--------------:|:-------------------------:|:-------------:|:----------------:|
-|usbd_core.c    |  3516          | 512(default) + 320        | 0             | 0                |
-|usbd_cdc.c     |  392           | 0                         | 0             | 0                |
-|usbd_msc.c     |  2839          | 128 + 512(default)        | 16            | 0                |
-|usbd_hid.c     |  364           | 0                         | 0             | 0                |
-|usbd_audio.c   |  1455          | 0                         | 0             | 0                |
-|usbd_video.c   |  2494          | 0                         | 84            | 0                |
-|usbd_rndis.c   |  2109          | 3340                      | 76            | 0                |
+|usbd_core.c    |  ~4400          | 512(default) + 320        | 0             | 0                |
+|usbd_cdc_acm.c |  ~400           | 0                         | 0             | 0                |
+|usbd_msc.c     |  ~3800          | 128 + 512(default)        | 16            | 0                |
+|usbd_hid.c     |  ~360           | 0                         | 0             | 0                |
+|usbd_audio.c   |  ~1500          | 0                         | 0             | 0                |
+|usbd_video.c   |  ~2600          | 0                         | 84            | 0                |
+|usbd_rndis.c   |  ~2100          | 2 * 1580(default)+156+8     | 76            | 0                |
 
 ## Host 协议栈简介
 
@@ -93,7 +103,7 @@ CherryUSB Host 协议栈当前实现以下功能：
 - 自动加载支持的Class 驱动
 - 支持阻塞式传输和异步传输
 - 支持复合设备
-- 支持多级 HUB,最高可拓展到 7 级(目前测试 1拖 10 没有问题，当前仅支持 dwc2 和 ehci)
+- 支持多级 HUB,最高可拓展到 7 级(目前测试 1拖 10 没有问题，仅支持 dwc2/ehci/xhci/rp2040)
 - 支持 Communication Device Class (CDC_ACM, CDC_ECM)
 - 支持 Human Interface Device (HID)
 - 支持 Mass Storage Class (MSC)
@@ -103,6 +113,7 @@ CherryUSB Host 协议栈当前实现以下功能：
 - 支持 USB Bluetooth (支持 nimble and zephyr bluetooth 协议栈，支持 **CLASS: 0xE0** 或者厂家自定义类，类似于 cdc acm 功能)
 - 支持 Vendor 类 class (serial, net, wifi)
 - 支持 USB modeswitch
+- 支持 Android Open Accessory
 - 支持相同 USB IP 的多主机
 
 同时，CherryUSB Host 协议栈还提供了 lsusb 的功能，借助 shell 插件可以查看所有挂载设备的信息，包括外部 hub 上的设备的信息。
@@ -111,16 +122,17 @@ CherryUSB Host 协议栈资源占用说明（GCC 10.2 with -O2）：
 
 |   file        |  FLASH (Byte)  |  No Cache RAM (Byte)            |  RAM (Byte)                 |  Heap (Byte) |
 |:-------------:|:--------------:|:-------------------------------:|:---------------------------:|:------------:|
-|usbh_core.c    |  ~7700          | 512 + 8 * (1+x) *n              | 28                          | raw_config_desc |
-|usbh_hub.c     |  ~5600          | 32 + 4* (1+x) | 12 + sizeof(struct usbh_hub) * (1+x)          | 0            |
-|usbh_cdc_acm.c |  ~1200          | 7             | 4  + sizeof(struct usbh_cdc_acm) * x          | 0            |
-|usbh_msc.c     |  ~2500          | 32            | 4  + sizeof(struct usbh_msc) * x              | 0            |
-|usbh_hid.c     |  ~1000          | 128           | 4  + sizeof(struct usbh_hid) * x              | 0            |
-|usbh_video.c   |  ~3700          | 128           | 4  + sizeof(struct usbh_video) * x            | 0            |
-|usbh_audio.c   |  ~3100          | 128           | 4  + sizeof(struct usbh_audio) * x            | 0            |
-|usbh_rndis.c   |  ~3900          | 4096 + 2 * 2048(default)| sizeof(struct usbh_rndis) * 1       | 0            |
-|usbh_cdc_ecm.c |  ~2500          | 2 * 1514              | sizeof(struct usbh_cdc_ecm) * 1       | 0            |
-|usbh_bluetooth.c |  ~2300        | 2 * 2048(default)   | sizeof(struct usbh_bluetooth) * 1       | 0            |
+|usbh_core.c    |  ~9000          | 512 + 8 * (1+x) *n              | 28                          | raw_config_desc |
+|usbh_hub.c     |  ~6000          | 32 + 4 * (1+x) | 12 + sizeof(struct usbh_hub) * (1+x)          | 0            |
+|usbh_cdc_acm.c |  ~900           | 7             | 4  + sizeof(struct usbh_cdc_acm) * x          | 0            |
+|usbh_msc.c     |  ~2700          | 64            | 4  + sizeof(struct usbh_msc) * x              | 0            |
+|usbh_hid.c     |  ~1400          | 256           | 4  + sizeof(struct usbh_hid) * x              | 0            |
+|usbh_video.c   |  ~3800          | 128           | 4  + sizeof(struct usbh_video) * x            | 0            |
+|usbh_audio.c   |  ~4100          | 128           | 4  + sizeof(struct usbh_audio) * x            | 0            |
+|usbh_rndis.c   |  ~4200          | 512 + 2 * 2048(default)| sizeof(struct usbh_rndis) * 1       | 0            |
+|usbh_cdc_ecm.c |  ~2200          | 2 * 1514 + 16           | sizeof(struct usbh_cdc_ecm) * 1     | 0            |
+|usbh_cdc_ncm.c |  ~3300          | 2 * 2048(default) + 16 + 32   | sizeof(struct usbh_cdc_ncm) * 1  | 0         |
+|usbh_bluetooth.c |  ~1000        | 2 * 2048(default)   | sizeof(struct usbh_bluetooth) * 1       | 0            |
 
 其中，`sizeof(struct usbh_hub)` 和 `sizeof(struct usbh_hubport)` 受以下宏影响：
 
@@ -148,7 +160,7 @@ x 受以下宏影响：
 
 |   IP             |  device    | host     | Support status |
 |:----------------:|:----------:|:--------:|:--------------:|
-|  OHCI(intel)     |  none      | OHCI     |  ×   |
+|  OHCI(intel)     |  none      | OHCI     |  √   |
 |  EHCI(intel)     |  none      | EHCI     |  √   |
 |  XHCI(intel)     |  none      | XHCI     |  √   |
 |  UHCI(intel)     |  none      | UHCI     |  ×   |
@@ -185,12 +197,13 @@ CherryUSB 快速入门、USB 基本概念，API 手册，Class 基本概念和�
 |Phytium        |  e2000 | pusb2/xhci |[phytium_repo](https://gitee.com/phytium_embedded/phytium-free-rtos-sdk)|>=1.4.0  | Long-term |
 |Artinchip      |  d12x/d13x/d21x | aic/ehci/ohci |[luban-lite](https://gitee.com/artinchip/luban-lite)|<= latest  | Long-term |
 |Espressif      |  esp32s2/esp32s3/esp32p4 | dwc2 |[esp32_repo](https://github.com/CherryUSB/cherryusb_esp32)|<= latest | Long-term |
-|NXP            |  mcx | chipidea/ehci |[nxp_mcx_repo](https://github.com/CherryUSB/cherryusb_mcx)|<= latest | Long-term |
+|NXP            |  mcx | kinetis/chipidea/ehci |[nxp_mcx_repo](https://github.com/CherryUSB/cherryusb_mcx)|<= latest | Long-term |
+|Kendryte       |  k230 | dwc2 |[k230_repo](https://github.com/CherryUSB/k230_sdk)|v1.2.0 | Long-term |
+|Raspberry pi   |  rp2040/rp2350 | rp2040 |[pico-examples](https://github.com/CherryUSB/pico-examples)|<= latest | Long-term |
 |AllwinnerTech  |  F1C100S/F1C200S | musb |[cherryusb_rtt_f1c100s](https://github.com/CherryUSB/cherryusb_rtt_f1c100s)|<= latest | the same with musb |
 |Bekencorp      |  bk7256/bk7258 | musb |[bk_idk](https://github.com/CherryUSB/bk_idk)| v0.7.0 | the same with musb |
 |Sophgo         |  cv18xx | dwc2 |[cvi_alios_open](https://github.com/CherryUSB/cvi_alios_open)| v0.7.0 | TBD |
 |WCH            |  CH32V307/ch58x | ch32_usbfs/ch32_usbhs/ch58x |[wch_repo](https://github.com/CherryUSB/cherryusb_wch)|<= v0.10.2 | TBD |
-|Raspberry pi   |  rp2040 | rp2040 |[pico-examples](https://github.com/CherryUSB/pico-examples)|<= v0.10.2 | No more updated |
 
 ## 软件包支持
 
@@ -213,4 +226,4 @@ CherryUSB 微信群：与我联系后邀请加入
 
 感谢以下企业支持（顺序不分先后）。
 
-<img src="docs/assets/bouffalolab.jpg"  width="100" height="100"/> <img src="docs/assets/hpmicro.jpg"  width="100" height="100" /> <img src="docs/assets/eastsoft.jpg"  width="100" height="100" /> <img src="docs/assets/rtthread.jpg"  width="100" height="100" /> <img src="docs/assets/sophgo.jpg"  width="100" height="100" /> <img src="docs/assets/phytium.jpg"  width="100" height="100" /> <img src="docs/assets/thead.jpg"  width="100" height="100" /> <img src="docs/assets/nuvoton.jpg"  width="100" height="100" /> <img src="docs/assets/artinchip.jpg"  width="100" height="100" /> <img src="docs/assets/bekencorp.jpg"  width="100" height="100" />
+<img src="docs/assets/bouffalolab.jpg"  width="100" height="80"/> <img src="docs/assets/hpmicro.jpg"  width="100" height="80" /> <img src="docs/assets/eastsoft.jpg"  width="100" height="80" /> <img src="docs/assets/rtthread.jpg"  width="100" height="80" /> <img src="docs/assets/sophgo.jpg"  width="100" height="80" /> <img src="docs/assets/phytium.jpg"  width="100" height="80" /> <img src="docs/assets/thead.jpg"  width="100" height="80" /> <img src="docs/assets/nuvoton.jpg"  width="100" height="80" /> <img src="docs/assets/artinchip.jpg"  width="100" height="80" /> <img src="docs/assets/bekencorp.jpg"  width="100" height="80" /> <img src="docs/assets/nxp.png"  width="100" height="80" /> <img src="docs/assets/espressif.png"  width="100" height="80" /> <img src="docs/assets/canaan.jpg"  width="100" height="80" />

@@ -83,6 +83,11 @@ static void gicv2_dist_init(struct gicv2 *gic)
 
     LOG_D("Max irq = %d", gic->max_irq);
 
+    if (gic->skip_init)
+    {
+        return;
+    }
+
     HWREG32(base + GIC_DIST_CTRL) = GICD_DISABLE;
 
     /* Set all global (unused) interrupts to this CPU only. */
@@ -128,6 +133,8 @@ static void gicv2_cpu_init(struct gicv2 *gic)
 
 #ifdef ARCH_SUPPORT_HYP
     _gicv2_eoi_mode_ns = RT_TRUE;
+#else
+    _gicv2_eoi_mode_ns = !!rt_ofw_bootargs_select("pic.gicv2_eoimode", 0);
 #endif
 
     if (_gicv2_eoi_mode_ns)
@@ -217,7 +224,7 @@ static rt_err_t gicv2_irq_set_affinity(struct rt_pic_irq *pirq, rt_bitmap_t *aff
         rt_uint32_t val;
         rt_ubase_t level;
         rt_ubase_t offset = (rt_ubase_t)io_addr & 3UL, shift = offset * 8;
-        static struct rt_spinlock rmw_lock = {};
+        static RT_DEFINE_SPINLOCK(rmw_lock);
 
         level = rt_spin_lock_irqsave(&rmw_lock);
 
@@ -617,6 +624,8 @@ static rt_err_t gicv2_ofw_init(struct rt_ofw_node *np, const struct rt_ofw_node_
             err = -RT_EINVAL;
             break;
         }
+
+        gic->skip_init = rt_ofw_prop_read_bool(np, "skip-init");
 
         gic_common_init_quirk_ofw(np, _gicv2_quirks, gic);
         gicv2_init(gic);

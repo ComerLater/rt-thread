@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: ${{ matrix.legs.RTT_BSP }}
     if: github.repository_owner == 'RT-Thread'
     strategy:
@@ -49,12 +49,45 @@ jobs:
             RTT_TOOL_CHAIN: "sourcery-arm"
             SUB_RTT_BSP:
                 - "raspberry-pico"
-         -  RTT_BSP: "others_at32_hc32_ht32"
+         -  RTT_BSP: "at32_hc32_ht32"
+            RTT_TOOL_CHAIN: "sourcery-arm"
+            SUB_RTT_BSP:
+                - "at32/at32a403a-start"
+                - "at32/at32a423-start"
+                - "at32/at32f402-start"
+                - "at32/at32f403a-start"
+                - "at32/at32f405-start"
+                - "at32/at32f407-start"
+                - "at32/at32f413-start"
+                - "at32/at32f415-start"
+                - "at32/at32f421-start"
+                - "at32/at32f423-start"
+                - "at32/at32f425-start"
+                - "at32/at32f435-start"
+                - "at32/at32f437-start"
+                - "at32/at32f455-start"
+                - "at32/at32f456-start"
+                - "at32/at32f457-start"
+                - "at32/at32m412-start"
+                - "at32/at32m416-start"
+                - "hc32/ev_hc32f4a0_lqfp176"
+                - "hc32/ev_hc32f448_lqfp80"
+                - "hc32/ev_hc32f460_lqfp100_v2"
+                - "hc32/ev_hc32f472_lqfp100"
+                - "hc32/lckfb-hc32f4a0-lqfp100"
+                - "hc32l196"
+                - "hc32l136"
+                - "ht32/ht32f52352"
+                - "ht32/ht32f12366"
+                - "ht32/ht32f53252"
+         -  RTT_BSP: "others_ft32_mm32_acm32"
             RTT_TOOL_CHAIN: "sourcery-arm"
             SUB_RTT_BSP: 
                 - "qemu-vexpress-a9"
                 - "airm2m/air32f103"
                 - "acm32/acm32f0x0-nucleo"
+                - "acm32/acm32f0x0-nucleo"
+                - "acm32/acm32f4xx-nucleo"
                 - "CME_M7"
                 - "apollo2"
                 - "asm9260t"
@@ -69,38 +102,20 @@ jobs:
                 - "synwit/swm341-mini"
                 - "beaglebone"
                 - "zynqmp-r5-axu4ev"
-                - "at32/at32a403a-start"
-                - "at32/at32a423-start"
-                - "at32/at32f402-start"
-                - "at32/at32f403a-start"
-                - "at32/at32f405-start"
-                - "at32/at32f407-start"
-                - "at32/at32f413-start"
-                - "at32/at32f415-start"
-                - "at32/at32f421-start"
-                - "at32/at32f423-start"
-                - "at32/at32f425-start"
-                - "at32/at32f435-start"
-                - "at32/at32f437-start"
-                - "at32/at32m412-start"
-                - "at32/at32m416-start"
                 - "yichip/yc3122-pos"
-                - "hc32/ev_hc32f4a0_lqfp176"
-                - "hc32/ev_hc32f448_lqfp80"
-                - "hc32/ev_hc32f460_lqfp100_v2"
-                - "hc32/ev_hc32f472_lqfp100"
-                - "hc32/lckfb-hc32f4a0-lqfp100"
-                - "hc32l196"
+                - "yichip/yc3121-pos"
                 - "mm32/mm32f3270-100ask-pitaya"
                 - "mm32f327x"
+                - "mm32f526x"
+                - "mm32l07x"
                 - "sam7x"
                 - "hk32/hk32f030c8-mini"
-                - "acm32/acm32f0x0-nucleo"
-                - "acm32/acm32f4xx-nucleo"
                 - "rm48x50"
-                - "ht32/ht32f52352"
-                - "ht32/ht32f12366"
-         -  RTT_BSP: "stm32l4_f0_f1" 
+                - "w60x"
+                - "essemi/es32f0654"
+                - "essemi/es32f365x"
+                - "fm33lc026"
+         -  RTT_BSP: "stm32l4" 
             RTT_TOOL_CHAIN: "sourcery-arm"
             SUB_RTT_BSP: 
                 - "stm32/stm32l4r5-st-nucleo"
@@ -121,6 +136,9 @@ jobs:
                 - "stm32/stm32l496-ali-developer"
                 - "stm32/stm32l496-st-nucleo"
                 - "stm32/stm32l496-st-discovery"
+         -  RTT_BSP: "stm32f0_f1" 
+            RTT_TOOL_CHAIN: "sourcery-arm"
+            SUB_RTT_BSP: 
                 - "stm32/stm32f072-st-nucleo"
                 - "stm32/stm32f091-st-nucleo"
                 - "stm32/stm32f103-100ask-mini"
@@ -181,6 +199,8 @@ jobs:
                 - "stm32/stm32g474-st-nucleo"
                 - "stm32/stm32h563-st-nucleo"
                 - "stm32/stm32h503-st-nucleo"
+                - "stm32/stm32h723-st-nucleo"
+                - "stm32/stm32h730-esphosted-evb"
                 - "stm32/stm32h743-armfly-v7"
                 - "stm32/stm32h743-atk-apollo"
                 - "stm32/stm32h743-openmv-h7plus"
@@ -208,8 +228,8 @@ jobs:
                 - "nxp/lpc/lpc1114"
                 - "nxp/lpc/lpc2148"
                 - "nxp/lpc/lpc2478"
-                # - "nxp/lpc/lpc5410x"
-                # - "nxp/lpc/lpc54114-lite"
+                - "nxp/lpc/lpc5410x"
+                - "nxp/lpc/lpc54114-lite"
                 - "nxp/lpc/lpc176x"
                 #- "nxp/lpc/lpc43xx/M4"
                 - "nxp/imx/imx6sx/cortex-a9"
@@ -223,19 +243,38 @@ jobs:
                 - "nxp/mcx/mcxn/frdm-mcxn947"
                 - "nxp/mcx/mcxn/frdm-mcxn236"
                 - "nxp/mcx/mcxa/frdm-mcxa153"
+                - "nxp/mcx/mcxa/frdm-mcxa156"
                 - "renesas/ebf_qi_min_6m5"
                 - "renesas/ra6m4-cpk"
                 - "renesas/ra6m4-iot"
                 - "renesas/ra6m3-ek"
                 - "renesas/ra6m3-hmi-board"
+                - "renesas/ra6e2-fpb"
                 - "renesas/ra4m2-eco"
                 - "renesas/ra2l1-cpk"
                 - "renesas/ra8m1-ek"
                 - "renesas/ra8d1-ek"
                 - "renesas/ra8d1-vision-board"
                 - "renesas/rzt2m_rsk"
+                - "renesas/rzn2l_rsk"
+                - "renesas/rzn2l_etherkit"
                 - "frdm-k64f"
                 - "xplorer4330/M4"
+         -  RTT_BSP: "nuvoton" 
+            RTT_TOOL_CHAIN: "sourcery-arm"
+            SUB_RTT_BSP: 
+                - "nuvoton/numaker-pfm-m487"
+                - "nuvoton/numaker-hmi-ma35d1"
+                - "nuvoton/numaker-iot-m487"
+                - "nuvoton/numaker-m032ki"
+                - "nuvoton/numaker-iot-m467"
+                - "nuvoton/numaker-m467hj"
+                - "nuvoton/nk-n9h30"
+                - "nuvoton/nk-rtu980"
+                - "nuvoton/ma35-rtp"
+                - "nuvoton/nk-980iot"
+                - "nuvoton/numaker-iot-ma35d1"
+                - "nuvoton/numaker-m2354"
          -  RTT_BSP: "gd32_n32_apm32"   
             RTT_TOOL_CHAIN: "sourcery-arm"
             SUB_RTT_BSP:             
@@ -254,6 +293,7 @@ jobs:
                 - "gd32/arm/gd32450z-eval" 
                 - "gd32/arm/gd32470z-lckfb"
                 - "gd32/arm/gd32h759i-start"
+                - "gd32/arm/gd32e503v-eval"
                 - "n32/n32g43xcl-stb"
                 - "n32/n32g45xcl-stb"
                 - "n32/n32g45xml-stb"
@@ -278,14 +318,9 @@ jobs:
                 - "apm32/apm32e103ze-evalboard"
                 - "apm32/apm32e103ze-tinyboard"
                 - "apm32/apm32s103vb-miniboard"
-         -  RTT_BSP: "nordic_Infineon_TI_microchip" 
+         -  RTT_BSP: "Infineon_TI_microchip" 
             RTT_TOOL_CHAIN: "sourcery-arm"
             SUB_RTT_BSP:  
-                - "nrf5x/nrf51822"
-                - "nrf5x/nrf52832"
-                - "nrf5x/nrf52833"
-                - "nrf5x/nrf52840"
-                - "nrf5x/nrf5340"
                 - "Infineon/psoc6-cy8ckit-062S2-43012"
                 - "Infineon/psoc6-cy8ckit-062-BLE"
                 - "Infineon/psoc6-cy8ckit-062s4"
@@ -322,12 +357,15 @@ jobs:
                 - "qemu-virt64-aarch64"
                 - "raspberry-pi/raspi3-64"
                 - "raspberry-pi/raspi4-64"
-                - "rockchip/rk3568"
-                - "phytium/aarch64"
+                #- "rockchip/rk3568"   too long
+                #- "phytium/aarch64"   too long
          -  RTT_BSP: "riscv-none" 
             RTT_TOOL_CHAIN: "sourcery-riscv-none-embed"
             SUB_RTT_BSP:  
                 - "k210"
+                - "wch/risc-v/ch32v208w-r0"
+                - "wch/risc-v/ch32v307v-r1"
+                - "wch/risc-v/yd-ch32v307vct6"
          -  RTT_BSP: "riscv64-unknown" 
             RTT_TOOL_CHAIN: "sourcery-riscv64-unknown-elf"
             SUB_RTT_BSP:  
@@ -362,10 +400,18 @@ jobs:
             RTT_TOOL_CHAIN: "sourcery-i386-unknown-elf"
             SUB_RTT_BSP:  
                 - "x86"
+         -  RTT_BSP: "nordic(yml)"
+            RTT_TOOL_CHAIN: "sourcery-arm"
+            SUB_RTT_BSP:
+                - "nrf5x/nrf51822"
+                - "nrf5x/nrf52832"
+                - "nrf5x/nrf52833"
+                - "nrf5x/nrf52840"
+                - "nrf5x/nrf5340"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@main
         with:
           python-version: 3.8
 
@@ -375,17 +421,31 @@ jobs:
           wget https://raw.githubusercontent.com/RT-Thread/env/master/install_ubuntu.sh
           chmod 777 install_ubuntu.sh
           ./install_ubuntu.sh
+          pip install -r tools/requirements.txt
           git config --global http.postBuffer 524288000
           echo "RTT_ROOT=${{ github.workspace }}" >> $GITHUB_ENV
           echo "RTT_CC=gcc" >> $GITHUB_ENV
           echo "export PATH=~/.env/tools/scripts:$PATH" > ~/.env/env.sh
 
-      - name: Install Arm ToolChains
-        if: ${{ matrix.legs.RTT_TOOL_CHAIN == 'sourcery-arm' && success() }}
+      - name: Cache GCC Arm Toolchain
+        if: ${{ matrix.legs.RTT_TOOL_CHAIN == 'sourcery-arm'}}
+        id: cache-gcc-arm
+        uses: actions/cache@main
+        with:
+          path: /opt/gcc-arm-none-eabi-10-2020-q4-major
+          key: ${{ runner.os }}-arm-none-eabi-10-2020-q4-major
+
+      - name: Download Arm ToolChains
+        if: ${{ matrix.legs.RTT_TOOL_CHAIN == 'sourcery-arm' && (steps.cache-gcc-arm.outputs.cache-hit != 'true') }}
         shell: bash
         run: |
           wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/v1.3/gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2
           sudo tar xjf gcc-arm-none-eabi-10-2020-q4-major-x86_64-linux.tar.bz2 -C /opt
+
+      - name: Install Arm ToolChains2
+        if: ${{ matrix.legs.RTT_TOOL_CHAIN == 'sourcery-arm'}}
+        shell: bash
+        run: |
           /opt/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc --version
           echo "RTT_EXEC_PATH=/opt/gcc-arm-none-eabi-10-2020-q4-major/bin" >> $GITHUB_ENV
 
