@@ -6,6 +6,6 @@ cwd   = GetCurrentDir()
 CPPPATH = [cwd]
 group = []
 
-if rtconfig.CROSS_TOOL == 'msvc':
+if rtconfig.CROSS_TOOL in ['msvc', 'mingw']:
     group = DefineGroup('Compiler', src, depend = [''], CPPPATH = CPPPATH)
 Return('group')

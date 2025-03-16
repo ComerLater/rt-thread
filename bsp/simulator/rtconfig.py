@@ -106,7 +106,7 @@ elif PLATFORM == 'mingw':
     OBJCPY = PREFIX + 'objcopy'
 
     DEVICE = ''
-    CFLAGS = DEVICE + ' -D_Win32 -DNO_OLDNAMES -fno-pic -fno-builtin -fno-exceptions -fno-omit-frame-pointer'
+    CFLAGS = DEVICE + ' -D_Win32 -DNO_OLDNAMES -fno-pic -fno-builtin -fno-exceptions -fno-omit-frame-pointer -ffunction-sections -fdata-sections'
 
     AFLAGS = ' -c' + DEVICE + ' -x assembler-with-cpp'
     LFLAGS = DEVICE + ' -static-libgcc  -Wl,--gc-sections,-Map=rtthread-win32.map -T mingw.ld '

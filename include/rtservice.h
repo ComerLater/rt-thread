@@ -34,7 +34,7 @@ extern "C" {
  * member of struct type.
  */
 #define rt_container_of(ptr, type, member) \
-    ((type *)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
+    ((type *)((char *)(ptr) - (rt_ubase_t)(&((type *)0)->member)))
 
 
 /**

@@ -26,15 +26,30 @@ if rtconfig.CROSS_TOOL == 'msvc':
         # such as fd_set related, struct timeval...
         'WIN32_LEAN_AND_MEAN'
     ]
-
+elif rtconfig.CROSS_TOOL == 'mingw':
+    CPPDEFINES += \
+    [
+        # avoid to conflict with the inherent STDC in VS
+        # '_CRT_DECLARE_NONSTDC_NAMES=0',
+        # errno macro redefinition
+        # '_CRT_ERRNO_DEFINED',
+        # avoid time.h conflicts, such as struct timespec, ctime, difftime...
+        # '_CRT_NO_TIME_T',
+        # disable deprecation of unsafe functions, such as strncpy
+        '_CRT_SECURE_NO_WARNINGS',
+        # lean and mean for Windows.h, exclude winsock.h when include Windows.h
+        # avoid conlicts between sys/select.h, time.h, and winsock.h
+        # such as fd_set related, struct timeval...
+        'WIN32_LEAN_AND_MEAN'
+    ]
 # remove no need file.
-if GetDepend('PKG_USING_GUIENGINE') == True:
-    src += ['sdl_fb.c']
-else:
-    LIBS.append('SDL2')
-    if sys.platform == 'win32':
-        LIBPATH.append(os.path.abspath(os.path.join(cwd, '../SDL2/lib/x86')))
-        CPPPATH.append(os.path.abspath(os.path.join(cwd, '../SDL2/include')))
+# if GetDepend('PKG_USING_GUIENGINE') == True:
+#     src += ['sdl_fb.c']
+# else:
+#     LIBS.append('SDL2')
+#     if sys.platform == 'win32':
+#         LIBPATH.append(os.path.abspath(os.path.join(cwd, '../SDL2/lib/x86')))
+#         CPPPATH.append(os.path.abspath(os.path.join(cwd, '../SDL2/include')))
 
 
 if GetDepend('RT_USING_DFS') == True:

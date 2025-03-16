@@ -49,9 +49,9 @@ void *rt_memset(void *s, int c, rt_ubase_t count)
     return s;
 #else
 
-#define LBLOCKSIZE      (sizeof(rt_ubase_t))
-#define UNALIGNED(X)    ((long)X & (LBLOCKSIZE - 1))
-#define TOO_SMALL(LEN)  ((LEN) < LBLOCKSIZE)
+#define __LBLOCKSIZE      (sizeof(rt_ubase_t))
+#define __UNALIGNED(X)    ((rt_ubase_t)X & (__LBLOCKSIZE - 1))
+#define __TOO_SMALL(LEN)  ((LEN) < __LBLOCKSIZE)
 
     unsigned int i = 0;
     char *m = (char *)s;
@@ -60,9 +60,9 @@ void *rt_memset(void *s, int c, rt_ubase_t count)
     unsigned char d = (unsigned int)c & (unsigned char)(-1);  /* To avoid sign extension, copy C to an
                                 unsigned variable. (unsigned)((char)(-1))=0xFF for 8bit and =0xFFFF for 16bit: word independent */
 
-    RT_ASSERT(LBLOCKSIZE == 2 || LBLOCKSIZE == 4 || LBLOCKSIZE == 8);
+    RT_ASSERT(__LBLOCKSIZE == 2 || __LBLOCKSIZE == 4 || __LBLOCKSIZE == 8);
 
-    if (!TOO_SMALL(count) && !UNALIGNED(s))
+    if (!__TOO_SMALL(count) && !__UNALIGNED(s))
     {
         /* If we get this far, we know that count is large and s is word-aligned. */
         aligned_addr = (unsigned long *)s;
@@ -70,24 +70,24 @@ void *rt_memset(void *s, int c, rt_ubase_t count)
         /* Store d into each char sized location in buffer so that
          * we can set large blocks quickly.
          */
-        for (i = 0; i < LBLOCKSIZE; i++)
+        for (i = 0; i < __LBLOCKSIZE; i++)
         {
             *(((unsigned char *)&buffer)+i) = d;
         }
 
-        while (count >= LBLOCKSIZE * 4)
+        while (count >= __LBLOCKSIZE * 4)
         {
             *aligned_addr++ = buffer;
             *aligned_addr++ = buffer;
             *aligned_addr++ = buffer;
             *aligned_addr++ = buffer;
-            count -= 4 * LBLOCKSIZE;
+            count -= 4 * __LBLOCKSIZE;
         }
 
-        while (count >= LBLOCKSIZE)
+        while (count >= __LBLOCKSIZE)
         {
             *aligned_addr++ = buffer;
-            count -= LBLOCKSIZE;
+            count -= __LBLOCKSIZE;
         }
 
         /* Pick up the remainder with a bytewise loop. */
@@ -101,9 +101,9 @@ void *rt_memset(void *s, int c, rt_ubase_t count)
 
     return s;
 
-#undef LBLOCKSIZE
-#undef UNALIGNED
-#undef TOO_SMALL
+#undef __LBLOCKSIZE
+#undef __UNALIGNED
+#undef __TOO_SMALL
 #endif /* RT_KLIBC_USING_LIBC_MEMSET */
 }
 #endif /* RT_KLIBC_USING_USER_MEMSET */
@@ -143,11 +143,11 @@ void *rt_memcpy(void *dst, const void *src, rt_ubase_t count)
     return dst;
 #else
 
-#define UNALIGNED(X, Y) \
-    (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)))
-#define BIGBLOCKSIZE    (sizeof (long) << 2)
-#define LITTLEBLOCKSIZE (sizeof (long))
-#define TOO_SMALL(LEN)  ((LEN) < BIGBLOCKSIZE)
+#define __UNALIGNED(X, Y) \
+    (((rt_ubase_t)X & (sizeof (rt_ubase_t) - 1)) | ((rt_ubase_t)Y & (sizeof (rt_ubase_t) - 1)))
+#define __BIGBLOCKSIZE    (sizeof (rt_ubase_t) << 2)
+#define __LITTLEBLOCKSIZE (sizeof (rt_ubase_t))
+#define __TOO_SMALL(LEN)  ((LEN) < __BIGBLOCKSIZE)
 
     char *dst_ptr = (char *)dst;
     char *src_ptr = (char *)src;
@@ -157,26 +157,26 @@ void *rt_memcpy(void *dst, const void *src, rt_ubase_t count)
 
     /* If the size is small, or either SRC or DST is unaligned,
     then punt into the byte copy loop.  This should be rare. */
-    if (!TOO_SMALL(len) && !UNALIGNED(src_ptr, dst_ptr))
+    if (!__TOO_SMALL(len) && !__UNALIGNED(src_ptr, dst_ptr))
     {
         aligned_dst = (long *)dst_ptr;
         aligned_src = (long *)src_ptr;
 
         /* Copy 4X long words at a time if possible. */
-        while (len >= BIGBLOCKSIZE)
+        while (len >= __BIGBLOCKSIZE)
         {
             *aligned_dst++ = *aligned_src++;
             *aligned_dst++ = *aligned_src++;
             *aligned_dst++ = *aligned_src++;
             *aligned_dst++ = *aligned_src++;
-            len -= BIGBLOCKSIZE;
+            len -= __BIGBLOCKSIZE;
         }
 
         /* Copy one long word at a time if possible. */
-        while (len >= LITTLEBLOCKSIZE)
+        while (len >= __LITTLEBLOCKSIZE)
         {
             *aligned_dst++ = *aligned_src++;
-            len -= LITTLEBLOCKSIZE;
+            len -= __LITTLEBLOCKSIZE;
         }
 
         /* Pick up any residual with a byte copier. */
@@ -188,10 +188,10 @@ void *rt_memcpy(void *dst, const void *src, rt_ubase_t count)
         *dst_ptr++ = *src_ptr++;
 
     return dst;
-#undef UNALIGNED
-#undef BIGBLOCKSIZE
-#undef LITTLEBLOCKSIZE
-#undef TOO_SMALL
+#undef __UNALIGNED
+#undef __BIGBLOCKSIZE
+#undef __LITTLEBLOCKSIZE
+#undef __TOO_SMALL
 #endif /* RT_KLIBC_USING_LIBC_MEMCPY */
 }
 #endif /* RT_KLIBC_USING_USER_MEMCPY */

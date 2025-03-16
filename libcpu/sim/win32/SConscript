@@ -4,10 +4,17 @@ from building import *
 
 Import('rtconfig')
 
-cwd     = GetCurrentDir()
-src     = Glob('*.c') + Glob('*.cpp')
+cwd = GetCurrentDir()
+src = ['cpu_port.c']
 CPPPATH = [cwd]
 
-group = DefineGroup('libcpu', src, depend = [''], CPPPATH = CPPPATH)
+if rtconfig.CROSS_TOOL == 'mingw':
+    src += ['startup_mingw.c']
+elif rtconfig.CROSS_TOOL == 'cygwin':
+    src += ['startup_cygwin.c']
+else:  # msvc
+    src += ['startup_msvc.c']
+
+group = DefineGroup('libcpu', src, depend=[''], CPPPATH=CPPPATH)
 
 Return('group')

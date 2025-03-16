@@ -31,11 +31,14 @@ extern "C" {
 /* this method of representing timezones has been abandoned */
 #define DST_NONE    0   /* not on dst */
 
+#ifndef _TIMEZONE_DEFINED
+#define _TIMEZONE_DEFINED
 struct timezone
 {
     int tz_minuteswest;   /* minutes west of Greenwich */
     int tz_dsttime;       /* type of dst correction */
 };
+#endif // _TIMEZONE_DEFINED
 
 /* lightweight timezone and daylight saving time */
 #ifdef RT_LIBC_USING_LIGHT_TZ_DST
@@ -84,11 +87,14 @@ struct itimerval
 #endif /* defined(_GNU_SOURCE) && (defined(__x86_64__) || defined(__i386__)) || defined(RT_USING_SMART) */
 
 #if defined(__ARMCC_VERSION) || defined(_WIN32) || (defined(__ICCARM__) && (__VER__ < 8010001))
+#ifndef _TIMESPEC_DEFINED
+#define _TIMESPEC_DEFINED
 struct timespec
 {
     time_t  tv_sec;     /* seconds */
     long    tv_nsec;    /* and nanoseconds */
 };
+#endif // _TIMESPEC_DEFINED
 #endif /* defined(__ARMCC_VERSION) || defined(_WIN32) || (defined(__ICCARM__) && (__VER__ < 8010001)) */
 
 #if !(defined(__GNUC__) && !defined(__ARMCC_VERSION)/*GCC*/)

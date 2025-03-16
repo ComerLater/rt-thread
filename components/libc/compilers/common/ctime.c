@@ -204,11 +204,13 @@ struct tm *gmtime_r(const time_t *timep, struct tm *r)
 }
 RTM_EXPORT(gmtime_r);
 
+#ifndef __MINGW32__
 struct tm* gmtime(const time_t* t)
 {
     static struct tm tmp;
     return gmtime_r(t, &tmp);
 }
+#endif
 RTM_EXPORT(gmtime);
 
 struct tm* localtime_r(const time_t* t, struct tm* r)
@@ -223,13 +225,16 @@ struct tm* localtime_r(const time_t* t, struct tm* r)
 }
 RTM_EXPORT(localtime_r);
 
+#ifndef __MINGW32__
 struct tm* localtime(const time_t* t)
 {
     static struct tm tmp;
     return localtime_r(t, &tmp);
 }
+#endif
 RTM_EXPORT(localtime);
 
+#ifndef __MINGW32__
 time_t mktime(struct tm * const t)
 {
     time_t timestamp;
@@ -242,6 +247,7 @@ time_t mktime(struct tm * const t)
 #endif /* RT_LIBC_USING_LIGHT_TZ_DST */
     return timestamp;
 }
+#endif
 RTM_EXPORT(mktime);
 
 char* asctime_r(const struct tm *t, char *buf)
@@ -312,13 +318,15 @@ char *ctime_r(const time_t * tim_p, char * result)
 }
 RTM_EXPORT(ctime_r);
 
+#ifndef __MINGW32__
 char *ctime(const time_t *tim_p)
 {
     return asctime(localtime(tim_p));
 }
+#endif
 RTM_EXPORT(ctime);
 
-#if (!defined __ARMCC_VERSION) && (!defined __CC_ARM) && (!defined __ICCARM__)
+#if (!defined __ARMCC_VERSION) && (!defined __CC_ARM) && (!defined __ICCARM__) && (!defined __MINGW32__)
 double difftime(time_t time1, time_t time2)
 {
     return (double)(time1 - time2);
@@ -337,6 +345,7 @@ RTM_EXPORT(strftime); /* inherent in the toolchain */
  *         If timer is not a NULL pointer, the return value is also stored in timer.
  *
  */
+#ifndef __MINGW32__
 rt_weak time_t time(time_t *t)
 {
 #ifdef RT_USING_RTC
@@ -357,6 +366,7 @@ rt_weak time_t time(time_t *t)
     return (time_t)-1;
 #endif
 }
+#endif
 RTM_EXPORT(time);
 
 rt_weak clock_t clock(void)

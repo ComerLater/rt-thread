@@ -27,7 +27,9 @@ typedef unsigned short   uid_t;
 typedef unsigned short   gid_t;
 typedef signed long      off_t;
 typedef int              mode_t;
+#ifndef __MINGW32__
 typedef signed long      ssize_t;       /* Used for a count of bytes or an error indication. */
+#endif
 typedef unsigned long    __timer_t;
 typedef __timer_t        timer_t;
 typedef long             suseconds_t;   /* microseconds. */

@@ -97,7 +97,7 @@ def ProjectRemove(group, remove):
                     item['src'].remove(src)
     return
 
-if rtconfig.CPU != 'posix':
+if rtconfig.CROSS_TOOL == 'msvc':
     ObjRemove(objs, ['components.obj', 'components.o', 'components.c'])
     ProjectRemove('Kernel', ['components.obj', 'components.o', 'components.c'])
 
