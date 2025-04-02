@@ -19,6 +19,16 @@
 
 static rt_err_t rt_uorb_init(struct rt_device *dev)
 {
+    rt_err_t result = RT_EOK;
+
+    struct rt_uorb_device *uorb;
+
+    RT_ASSERT(dev != RT_NULL);
+
+    uorb = (struct rt_uorb_device *)dev;
+    rt_memset(&uorb->node, 0, sizeof(uorb->node));
+    rt_list_init(&uorb->node.list);
+
     return RT_EOK;
 }
 

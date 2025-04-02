@@ -24,7 +24,7 @@ extern "C" {
 /**
  * Object metadata.
  */
-struct orb_metadata
+struct orb_metadata_s
 {
     const char    *o_name;            /**< unique object name */
     const uint16_t o_size;            /**< object size */
@@ -33,8 +33,8 @@ struct orb_metadata
     uint8_t        o_id;              /**< ORB_ID enum */
 };
 
-typedef const struct orb_metadata *orb_id_t;
-typedef const struct orb_metadata  orb_metadata_t;
+typedef const struct orb_metadata_s *orb_id_t;
+typedef const struct orb_metadata_s  orb_metadata_t;
 
 
 /**
@@ -54,9 +54,9 @@ typedef const struct orb_metadata  orb_metadata_t;
  * @param _name		The name of the topic.
  */
 #if defined(__cplusplus)
-#define ORB_DECLARE(_name) extern "C" const struct orb_metadata __orb_##_name
+#define ORB_DECLARE(_name) extern "C" const struct orb_metadata_s __orb_##_name
 #else
-#define ORB_DECLARE(_name) extern const struct orb_metadata __orb_##_name
+#define ORB_DECLARE(_name) extern const struct orb_metadata_s __orb_##_name
 #endif //__cplusplus
 
 
@@ -76,7 +76,7 @@ typedef const struct orb_metadata  orb_metadata_t;
  * @param _orb_id_enum	ORB ID enum e.g.: ORB_ID::vehicle_status
  */
 #define ORB_DEFINE(_name, _struct, _size_no_padding, _fields, _orb_id_enum) \
-    const struct orb_metadata __orb_##_name = {                             \
+    const struct orb_metadata_s __orb_##_name = {                           \
         #_name,                                                             \
         sizeof(_struct),                                                    \
         _size_no_padding,                                                   \
@@ -108,24 +108,24 @@ typedef struct orb_callback_s
 
 typedef struct orb_node_s
 {
-    rt_list_t                  list;
-    const struct orb_metadata *meta;
-    rt_uint8_t                 instance;
-    rt_uint8_t                 queue_size;
-    rt_uint32_t                generation;
-    rt_list_t                  callbacks;
-    rt_bool_t                  advertised;
-    rt_uint8_t                 subscriber_count;
-    rt_bool_t                  data_valid;
-    rt_uint8_t                *data;
+    rt_list_t                    list;
+    const struct orb_metadata_s *meta;
+    rt_uint8_t                   instance;         // 实例序号
+    rt_uint8_t                   queue_size;       // 栈的长度
+    rt_uint32_t                  generation;       // 更新代数
+    rt_list_t                    callbacks;        // 回调函数链表
+    rt_bool_t                    advertised;       // 是否公告
+    rt_uint8_t                   subscriber_count; // 订阅者个数
+    rt_bool_t                    data_valid;       // data是否有效
+    rt_uint8_t                  *data;
 } orb_node_t;
 
 
 typedef struct orb_subscribe_s
 {
-    const struct orb_metadata *meta;
-    rt_uint8_t                 instance;
-    rt_tick_t                  interval;
+    const struct orb_metadata_s *meta;
+    rt_uint8_t                   instance;
+    rt_tick_t                    interval;
 
     struct rt_uorb_device *node;
     rt_uint32_t            generation;
