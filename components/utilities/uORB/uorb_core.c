@@ -13,8 +13,9 @@
 
 #include "uORB.h"
 #include <rtdbg.h>
+#include <stdbool.h>
 
-static rt_list_t _node_list;
+static rt_list_t _orb_node_list;
 
 // round up to nearest power of two
 // Such as 0 => 1, 1 => 1, 2 => 2 ,3 => 4, 10 => 16, 60 => 64, 65...255 => 128
@@ -44,7 +45,7 @@ static inline rt_uint8_t round_pow_of_two_8(rt_uint8_t n)
 }
 
 
-orb_node_t *orb_node_create(const struct orb_metadata *meta, const rt_uint8_t instance, rt_uint8_t queue_size)
+orb_node_t *orb_node_create(const struct orb_metadata_s *meta, const rt_uint8_t instance, rt_uint8_t queue_size)
 {
     RT_ASSERT(meta != RT_NULL);
 
@@ -62,7 +63,7 @@ orb_node_t *orb_node_create(const struct orb_metadata *meta, const rt_uint8_t in
     char *name = rt_calloc(RT_NAME_MAX, 1);
     rt_snprintf(name, RT_NAME_MAX, "%s%d", meta->o_name, instance);
 
-    rt_list_insert_after(_node_list.prev, &node->list);
+    rt_list_insert_after(_orb_node_list.prev, &node->list);
 
     // 注册设备
     // rt_uorb_register(node, name, 0, RT_NULL);
@@ -76,14 +77,14 @@ rt_err_t orb_node_delete(orb_node_t *node)
 }
 
 
-orb_node_t *orb_node_find(const struct orb_metadata *meta, int instance)
+orb_node_t *orb_node_find(const struct orb_metadata_s *meta, int instance)
 {
     // 遍历_node_list
-    rt_list_t *pos;
-    rt_node_t *node;
-    rt_list_for_each(pos, &_node_list)
+    rt_list_t  *pos;
+    orb_node_t *node;
+    rt_list_for_each(pos, &_orb_node_list)
     {
-        node = rt_list_entry(pos, rt_node_t, list);
+        node = rt_list_entry(pos, orb_node_t, list);
         if (node->meta == meta && node->instance == instance)
         {
             return node;
@@ -93,7 +94,7 @@ orb_node_t *orb_node_find(const struct orb_metadata *meta, int instance)
     return RT_NULL;
 }
 
-bool orb_node_exists(const struct orb_metadata *meta, int instance)
+bool orb_node_exists(const struct orb_metadata_s *meta, int instance)
 {
     if (!meta)
     {
@@ -162,7 +163,7 @@ int orb_node_write(orb_node_t *node, void *data)
     }
 
     // copy data to buffer
-    rt_memcpy(node->data, (node->meta->o_size * node->generation % node->queue_size), data, node->meta->o_size);
+    rt_memcpy(node->data, data, (node->meta->o_size * node->generation) % node->queue_size);
 
     // invoke callbacks
     rt_list_t      *pos;
@@ -211,7 +212,7 @@ bool orb_node_ready(orb_subscribe_t *handle)
     return false;
 }
 
-orb_subscribe_t orb_subscribe_multi(const struct orb_metadata *meta, unsigned instance)
+orb_subscribe_t *orb_subscribe_multi(const struct orb_metadata_s *meta, unsigned instance)
 {
     orb_subscribe_t *sub = rt_calloc(sizeof(orb_subscribe_t), 1);
 
@@ -259,7 +260,7 @@ int orb_check(orb_subscribe_t *handle, rt_bool_t *updated)
     return RT_EOK;
 }
 
-int orb_copy(const struct orb_metadata *meta, orb_subscribe_t *handle, void *buffer)
+int orb_copy(const struct orb_metadata_s *meta, orb_subscribe_t *handle, void *buffer)
 {
     if (!buffer)
     {
@@ -270,10 +271,12 @@ int orb_copy(const struct orb_metadata *meta, orb_subscribe_t *handle, void *buf
     {
         return -RT_ERROR;
     }
+
+    return RT_EOK;
 }
 
 
-orb_advertise_t orb_advertise_multi_queue(const struct orb_metadata *meta, const void *data, int *instance,
+orb_advertise_t orb_advertise_multi_queue(const struct orb_metadata_s *meta, const void *data, int *instance,
                                           unsigned int queue_size)
 {
     if (!meta)
@@ -299,22 +302,21 @@ orb_advertise_t orb_advertise_multi_queue(const struct orb_metadata *meta, const
         }
     }
 
-    for (inst = 0; inst < max_inst, inst++)
+    for (inst = 0; inst < max_inst; inst++)
     {
-        node = orb_node_find(meta, inst)
+        node = orb_node_find(meta, inst);
+
+        if (node)
         {
-            if (node)
+            if (node->advertised)
             {
-                if (node->advertised)
-                {
-                    break;
-                }
-            }
-            else
-            {
-                node = orb_node_create(meta, inst, queue_size);
                 break;
             }
+        }
+        else
+        {
+            node = orb_node_create(meta, inst, queue_size);
+            break;
         }
     }
 
@@ -347,7 +349,7 @@ int orb_unadvertise(orb_node_t *node)
 }
 
 
-int orb_publish(const struct orb_metadata *meta, orb_node_t *node, const void *data)
+int orb_publish(const struct orb_metadata_s *meta, orb_node_t *node, const void *data)
 {
     if (!data)
     {

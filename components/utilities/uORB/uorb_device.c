@@ -88,7 +88,7 @@ const static struct rt_device_ops _uorb_ops =
 rt_err_t rt_uorb_register(struct rt_uorb_device *node, const char *name, uint32_t flag, void *data)
 {
     RT_ASSERT(node != RT_NULL);
-    RT_ASSERT(meta != RT_NULL);
+    // RT_ASSERT(meta != RT_NULL);
 
     struct rt_device *device = &(node->parent);
     device->type             = RT_Device_Class_Char;
@@ -111,7 +111,7 @@ rt_err_t rt_uorb_register(struct rt_uorb_device *node, const char *name, uint32_
 
 #ifdef RT_USING_POSIX_STDIO
     /* set fops */
-    device->fops = &_uorb_fops;
+    // device->fops = &_uorb_fops;
 #endif
     return ret;
 }
