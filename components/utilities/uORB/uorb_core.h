@@ -20,6 +20,10 @@
 extern "C" {
 #endif // __cplusplus
 
+#ifndef ORB_MULTI_MAX_INSTANCES
+#define ORB_MULTI_MAX_INSTANCES 4
+#endif //ORB_MULTI_MAX_INSTANCES
+
 
 /**
  * Object metadata.

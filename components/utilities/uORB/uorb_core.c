@@ -17,6 +17,19 @@
 
 static rt_list_t _orb_node_list;
 
+// Determine the data range
+static inline bool is_in_range(unsigned left, unsigned value, unsigned right)
+{
+    if (right > left)
+    {
+        return (left <= value) && (value <= right);
+    }
+    else
+    { // Maybe the data overflowed and a wraparound occurred
+        return (left <= value) || (value <= right);
+    }
+}
+
 // round up to nearest power of two
 // Such as 0 => 1, 1 => 1, 2 => 2 ,3 => 4, 10 => 16, 60 => 64, 65...255 => 128
 // Note: When the input value > 128, the output is always 128
@@ -53,19 +66,19 @@ orb_node_t *orb_node_create(const struct orb_metadata_s *meta, const rt_uint8_t 
 
     node->meta             = meta;
     node->instance         = instance;
-    node->queue_size       = queue_size;
+    node->queue_size       = round_pow_of_two_8(queue_size);
     node->generation       = 0;
     node->advertised       = 0;
     node->subscriber_count = 0;
     node->data_valid       = 0;
     node->data             = RT_NULL;
 
-    char *name = rt_calloc(RT_NAME_MAX, 1);
-    rt_snprintf(name, RT_NAME_MAX, "%s%d", meta->o_name, instance);
 
     rt_list_insert_after(_orb_node_list.prev, &node->list);
 
     // 注册设备
+    // char name[RT_NAME_MAX];
+    // rt_snprintf(name, RT_NAME_MAX, "%s%d", meta->o_name, instance);
     // rt_uorb_register(node, name, 0, RT_NULL);
 
     return node;
@@ -73,7 +86,21 @@ orb_node_t *orb_node_create(const struct orb_metadata_s *meta, const rt_uint8_t 
 
 rt_err_t orb_node_delete(orb_node_t *node)
 {
-    return 0;
+    RT_ASSERT(node != RT_NULL);
+
+    if (!node)
+    {
+        return -RT_ERROR;
+    }
+
+    node->advertised = false;
+
+    if (node->subscriber_count == 0)
+    {
+        rt_free(node);
+    }
+
+    return RT_EOK;
 }
 
 
@@ -82,14 +109,19 @@ orb_node_t *orb_node_find(const struct orb_metadata_s *meta, int instance)
     // 遍历_node_list
     rt_list_t  *pos;
     orb_node_t *node;
+
+    rt_enter_critical();
     rt_list_for_each(pos, &_orb_node_list)
     {
         node = rt_list_entry(pos, orb_node_t, list);
         if (node->meta == meta && node->instance == instance)
         {
+            rt_exit_critical();
             return node;
         }
     }
+    rt_exit_critical();
+
 
     return RT_NULL;
 }
@@ -127,17 +159,36 @@ int orb_node_read(orb_node_t *node, void *data, int *generation)
         return 0;
     }
 
+
+    const unsigned current_generation = node->generation;
+    unsigned       updated_generation = generation ? (*generation) : current_generation;
+
+
     if (node->queue_size == 1)
     {
         rt_memcpy(data, node->data, node->meta->o_size);
-        if (generation)
-        {
-            generation = node->generation;
-        }
+        updated_generation = current_generation;
     }
     else
     {
-        // TODO:
+        if (current_generation == updated_generation)
+        {
+            updated_generation--;
+        }
+
+        if (!is_inrange(current_generation - node->queue_size, updated_generation, current_generation - 1))
+        {
+            updated_generation = current_generation - node->queue_size;
+        }
+
+        rt_memcpy(data, node->data + (node->meta->o_size * (updated_generation % node->queue_size)), node->meta->o_size);
+
+        updated_generation++;
+    }
+
+    if (generation)
+    {
+        generation = updated_generation;
     }
 
     return node->meta->o_size;
@@ -162,8 +213,10 @@ int orb_node_write(orb_node_t *node, void *data)
         return -RT_ERROR;
     }
 
+    rt_enter_critical();
+
     // copy data to buffer
-    rt_memcpy(node->data, data, (node->meta->o_size * node->generation) % node->queue_size);
+    rt_memcpy(node->data + (node->meta->o_size * (node->generation % node->queue_size)), data, node->meta->o_size);
 
     // invoke callbacks
     rt_list_t      *pos;
@@ -182,6 +235,8 @@ int orb_node_write(orb_node_t *node, void *data)
 
     // update generation
     node->generation++;
+
+    rt_exit_critical();
 
     return node->meta->o_size;
 }
@@ -231,6 +286,14 @@ int orb_unsubscribe(orb_subscribe_t *handle)
     {
         return -RT_ERROR;
     }
+
+    if (handle->node)
+    {
+        handle->node->subscriber_count--;
+    }
+
+    handle->node       = RT_NULL;
+    handle->generation = 0;
 
     rt_free(handle);
     return RT_EOK;
@@ -286,6 +349,8 @@ orb_advertise_t orb_advertise_multi_queue(const struct orb_metadata_s *meta, con
 
     orb_node_t *node = RT_NULL;
 
+    // 允许的最大instance个数
+
     int max_inst = ORB_MULTI_MAX_INSTANCES;
     int inst     = 0;
 
@@ -302,13 +367,14 @@ orb_advertise_t orb_advertise_multi_queue(const struct orb_metadata_s *meta, con
         }
     }
 
+    // 搜索实例是否存在，不存在则创建，存在则判断是否公告
     for (inst = 0; inst < max_inst; inst++)
     {
         node = orb_node_find(meta, inst);
 
         if (node)
         {
-            if (node->advertised)
+            if (!node->advertised)
             {
                 break;
             }
@@ -320,14 +386,16 @@ orb_advertise_t orb_advertise_multi_queue(const struct orb_metadata_s *meta, con
         }
     }
 
+    // 如果node找到/创建成功，发布首次数据，且返回instance
     if (node)
     {
+        // 标记为已经公告，只有公告过的主题才能copy和publish数据
         node->advertised = true;
         if (data)
         {
             orb_node_write(node, data);
         }
-
+        // 返回inst
         if (instance)
         {
             *instance = inst;
